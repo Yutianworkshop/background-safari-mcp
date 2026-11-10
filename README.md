@@ -1,5 +1,7 @@
 # background-safari-mcp
 
+**English** | [简体中文](README.zh-CN.md)
+
 An MCP server that lets an AI agent work in **your real Safari** — with your existing logins — **without taking over your computer**. It works in a separate background window, does not move your mouse, and does not bring Safari to the front.
 
 No Safari extension to install. macOS only.
