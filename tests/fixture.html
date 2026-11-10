@@ -1,0 +1,96 @@
+<!doctype html><html><head><meta charset="utf-8"><title>SM Fixture</title>
+<style>body{font:14px system-ui;margin:20px} #dz{border:2px dashed #888;padding:30px;width:300px} #card{cursor:pointer;padding:8px;border:1px solid #ccc;width:200px}
+#box{height:150px;width:300px;overflow:auto;border:1px solid #aaa} .tall{height:1200px}</style></head><body>
+<h1>Fixture page</h1>
+<h2>Form</h2>
+<form id="f">
+ <label for="email">Email</label><input id="email" name="email" type="email">
+ <label>Password <input id="pw" type="password"></label>
+ <label>Bio <textarea id="bio" name="bio"></textarea></label>
+ <label>Country <select id="country"><option value="">--</option><option value="us">United States</option><option value="cn">China</option></select></label>
+ <label><input type="checkbox" id="agree"> I agree</label>
+ <label><input type="radio" name="r" value="a" id="ra"> Alpha</label><label><input type="radio" name="r" value="b" id="rb"> Beta</label>
+ <button type="submit">Send form</button>
+</form>
+<div id="submitted"></div>
+<h2>Widgets</h2>
+<input id="ctl" placeholder="Controlled"> <span id="mirror"></span>
+<input id="ac" placeholder="Autocomplete"><ul id="sugg"></ul><span id="ackeys">0</span>
+<div id="card">Open card</div><span id="cardout"></span>
+<sm-widget></sm-widget><span id="shadowout"></span>
+<iframe src="frame.html" title="Inner frame" width="320" height="80"></iframe>
+<div id="ed" contenteditable="true" aria-label="Editor" style="border:1px solid #aaa;min-height:30px;width:300px"></div><span id="edout"></span>
+<h2>Native and extras</h2>
+<button id="trust">Trusted only</button><span id="trustout"></span>
+<input id="tin" placeholder="Trusted input"><span id="tinout"></span>
+<button id="timerdlg">Timer dialog</button><span id="timerout"></span>
+<a id="blank" href="page2.html" target="_blank">Open in new tab</a>
+<div id="drag1" draggable="true" style="width:70px;border:1px solid #333">Drag me</div><div id="drop1" style="width:140px;height:40px;border:1px dashed #333">Drop zone A</div><span id="dndout"></span>
+<div id="track" style="width:240px;height:20px;background:#ddd;position:relative;margin:6px 0"><div id="knob" style="width:20px;height:20px;background:#333;position:absolute;left:0"></div></div><span id="knobout"></span>
+<table id="tbl" border="1"><caption>Scores</caption><tr><th>Name</th><th>Score</th></tr><tr><td>Ada</td><td>90</td></tr><tr><td>Lin</td><td>85</td></tr></table>
+<h2>Cross-origin frame and downloads</h2>
+<iframe id="xf" title="Payment frame" width="520" height="150"></iframe><span id="xout"></span><span id="xin"></span>
+<a id="dl" href="/download/report.csv">Download report</a>
+<button id="dlblob">Make blob download</button>
+<h2>Files</h2>
+<label for="file1" style="cursor:pointer">Choose file</label><input type="file" id="file1" style="display:none" multiple>
+<pre id="fileout"></pre>
+<input type="file" id="file2" multiple><span id="file2out"></span>
+<div id="dz">Drop files here</div><pre id="dropout"></pre>
+<h2>Dialogs and timing</h2>
+<button id="del">Delete item</button><span id="delout"></span>
+<button id="al">Show alert</button><span id="alout"></span>
+<button id="later">Load later</button><div id="latebox"></div>
+<button id="fx">Do fetch</button><span id="fxout"></span>
+<a id="p2" href="page2.html">Go to page two</a>
+<div id="hov" style="width:100px;border:1px solid #ccc">Hover me</div><span id="hovout"></span>
+<button id="dbl">Double</button><span id="dblout"></span>
+<span id="keys"></span>
+<div id="box"><div class="tall">Tall inner content<button id="innerbtn" style="margin-top:900px;display:block">Deep inner button</button></div></div>
+<div class="tall"></div><button id="bottom">Bottom button</button>
+<script>
+const $=id=>document.getElementById(id);
+$('f').addEventListener('submit',e=>{e.preventDefault();$('submitted').textContent='submitted:'+JSON.stringify(Object.fromEntries(new FormData(e.target)))+':agree='+$('agree').checked;});
+// React-like controlled input: state changes only through input events; the DOM value is re-rendered from state.
+let state='';$('ctl').addEventListener('input',e=>{state=e.target.value;$('mirror').textContent=state;});
+setInterval(()=>{if($('ctl').value!==state)$('ctl').value=state;},40);
+// keystroke-driven autocomplete
+let nk=0;const words=['Geometry','Geology','Geneva'];
+$('ac').addEventListener('keydown',()=>{$('ackeys').textContent=++nk;});
+$('ac').addEventListener('input',e=>{const q=e.target.value.toLowerCase();$('sugg').innerHTML='';if(!q)return;
+  words.filter(w=>w.toLowerCase().startsWith(q)).forEach(w=>{const li=document.createElement('li');li.setAttribute('role','option');li.textContent=w;
+  li.addEventListener('mousedown',()=>{$('ac').value=w;$('sugg').innerHTML='';});$('sugg').appendChild(li);});});
+$('card').addEventListener('click',e=>{$('cardout').textContent='card:'+(e.clientX>0&&e.clientY>0?'coords':'nocoords')+':'+e.detail;});
+customElements.define('sm-widget',class extends HTMLElement{constructor(){super();const r=this.attachShadow({mode:'open'});
+  r.innerHTML='<button id="sb">Shadow button</button><input id="si" placeholder="Shadow input">';
+  r.getElementById('sb').addEventListener('click',()=>{$('shadowout').textContent='shadow:'+r.getElementById('si').value;});}});
+$('ed').addEventListener('input',()=>{$('edout').textContent='ed:'+$('ed').innerText;});
+async function sha(f){const b=await f.arrayBuffer();const h=await crypto.subtle.digest('SHA-256',b);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function show(files,out){const rows=[];for(const f of files)rows.push(f.name+'|'+f.size+'|'+f.type+'|'+await sha(f));$(out).textContent=rows.join('\n')+'\nDONE';}
+$('file1').addEventListener('change',e=>show(e.target.files,'fileout'));
+$('file2').addEventListener('change',e=>{$('file2out').textContent='got:'+Array.from(e.target.files).map(f=>f.name+':'+f.size).join(',');e.target.value='';});
+$('dz').addEventListener('dragover',e=>e.preventDefault());
+$('dz').addEventListener('drop',e=>{e.preventDefault();show(e.dataTransfer.files,'dropout');});
+$('del').addEventListener('click',()=>{$('delout').textContent=confirm('Really delete?')?'deleted':'kept';});
+$('al').addEventListener('click',()=>{alert('Heads up');$('alout').textContent='alerted';});
+$('later').addEventListener('click',()=>{setTimeout(()=>{$('latebox').innerHTML='<p id="late">Late content arrived</p>';},900);});
+$('fx').addEventListener('click',async()=>{console.log('fetching now',{a:1});const r=await fetch('/api/echo?x=1',{method:'POST'});$('fxout').textContent='fx:'+(await r.json()).ok;console.warn('fetch done');});
+$('hov').addEventListener('mouseover',()=>{$('hovout').textContent='hovered';});
+$('dbl').addEventListener('dblclick',()=>{$('dblout').textContent='dbl';});
+console.log('boot log');
+$('xf').src='http://localhost:'+location.port+'/xframe.html';
+window.addEventListener('message',e=>{if(e.data&&e.data.kind==='pay')$('xout').textContent='pay:'+e.data.name+':'+e.data.agree+':'+e.data.sel+':'+e.data.trusted;if(e.data&&e.data.kind==='input')$('xin').textContent='xin:'+e.data.value+':'+e.data.trusted;});
+$('dlblob').addEventListener('click',()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['blob,data\n1,2\n'],{type:'text/csv'}));a.download='blob-export.csv';document.body.appendChild(a);a.click();a.remove();});
+
+$('trust').addEventListener('click',e=>{$('trustout').textContent=e.isTrusted?'trusted':'untrusted';});
+$('tin').addEventListener('input',e=>{if(e.isTrusted)$('tinout').textContent='tin:'+e.target.value;});
+$('timerdlg').addEventListener('click',()=>{setTimeout(()=>{$('timerout').textContent=confirm('Timer confirm?')?'yes':'no';},3200);});
+$('drag1').addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain','drag1');});
+$('drop1').addEventListener('dragover',e=>e.preventDefault());
+$('drop1').addEventListener('drop',e=>{e.preventDefault();$('dndout').textContent='dropped:'+e.dataTransfer.getData('text/plain');});
+let kd=null;$('knob').addEventListener('mousedown',e=>{kd={x:e.clientX,l:$('knob').offsetLeft};e.preventDefault();});
+document.addEventListener('mousemove',e=>{if(kd)$('knob').style.left=Math.max(0,Math.min(220,kd.l+e.clientX-kd.x))+'px';});
+document.addEventListener('mouseup',()=>{if(kd){kd=null;$('knobout').textContent='knob:'+$('knob').offsetLeft;}});
+document.addEventListener('keydown',e=>{$('keys').textContent+=(e.metaKey?'Meta+':'')+e.key+',';});
+$('innerbtn').addEventListener('click',()=>{$('keys').textContent+='INNER,';});
+</script><script src="late.js"></script></body></html>

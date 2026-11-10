@@ -1,0 +1,11 @@
+<!doctype html><html><head><title>Cross frame</title></head><body style="margin:6px;font:14px system-ui">
+<h3>Payment box</h3>
+<label>Card name <input id="xname" placeholder="Name on card"></label>
+<label><input type="checkbox" id="xagree"> Save card</label>
+<select id="xsel"><option>Visa</option><option>Mastercard</option></select>
+<button id="xpay">Pay now</button> <a id="xlink" href="#x">Frame link</a>
+<p id="xtext">Total due: 42 USD</p>
+<script>
+document.getElementById('xpay').addEventListener('click',e=>{parent.postMessage({kind:'pay',name:document.getElementById('xname').value,agree:document.getElementById('xagree').checked,sel:document.getElementById('xsel').value,trusted:e.isTrusted},'*');});
+document.getElementById('xname').addEventListener('input',e=>{parent.postMessage({kind:'input',value:e.target.value,trusted:e.isTrusted},'*');});
+</script></body></html>
